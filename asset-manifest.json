@@ -1,0 +1,23 @@
+{
+  "files": {
+    "main.css": "/destiny-app/static/css/main.5f361e03.chunk.css",
+    "main.js": "/destiny-app/static/js/main.0a861c04.chunk.js",
+    "main.js.map": "/destiny-app/static/js/main.0a861c04.chunk.js.map",
+    "runtime-main.js": "/destiny-app/static/js/runtime-main.8c982e82.js",
+    "runtime-main.js.map": "/destiny-app/static/js/runtime-main.8c982e82.js.map",
+    "static/js/2.408e11cb.chunk.js": "/destiny-app/static/js/2.408e11cb.chunk.js",
+    "static/js/2.408e11cb.chunk.js.map": "/destiny-app/static/js/2.408e11cb.chunk.js.map",
+    "index.html": "/destiny-app/index.html",
+    "precache-manifest.77a2d26f4ab9ee079a9ee79c0bc9bb0c.js": "/destiny-app/precache-manifest.77a2d26f4ab9ee079a9ee79c0bc9bb0c.js",
+    "service-worker.js": "/destiny-app/service-worker.js",
+    "static/css/main.5f361e03.chunk.css.map": "/destiny-app/static/css/main.5f361e03.chunk.css.map",
+    "static/js/2.408e11cb.chunk.js.LICENSE.txt": "/destiny-app/static/js/2.408e11cb.chunk.js.LICENSE.txt",
+    "static/media/logo.svg": "/destiny-app/static/media/logo.5d5d9eef.svg"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.8c982e82.js",
+    "static/js/2.408e11cb.chunk.js",
+    "static/css/main.5f361e03.chunk.css",
+    "static/js/main.0a861c04.chunk.js"
+  ]
+}

@@ -3,16 +3,35 @@ import { useState } from "react";
 import logo from './logo.svg';
 import './App.css';
 
-import ClientOAuth2 from "client-oauth2";
+// import ClientOAuth2 from "client-oauth2";
 import {
   BrowserRouter as Router,
-  Switch,
   Route,
-  Link
 } from "react-router-dom";
 
 import * as qs from 'query-string';
-import { ExecFileOptionsWithStringEncoding } from "child_process";
+
+function is_dev()
+{
+  return process.env.NODE_ENV === "development";
+}
+
+function get_client_id(): string
+{
+  return is_dev() ? process.env.REACT_APP_DEV_DESTINY_CLIENT_ID as string : process.env.REACT_APP_DESTINY_CLIENT_ID as string
+}
+
+function get_api_key() : string
+{
+  return is_dev() ? process.env.REACT_APP_DEV_DESTINY_CLIENT_ID as string : process.env.REACT_APP_DESTINY_CLIENT_ID as string;
+}
+
+function createFormParams (params: any)
+{
+  return Object.keys(params)
+      .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+      .join('&')
+}
 
 interface DestinyAccount
 {
@@ -22,74 +41,33 @@ interface DestinyAccount
 
 function App()
 {
-  const [code, setCode] = useState('');
+  const [haveToken, setHaveToken] = useState(false);
   const [user, setUser] = useState({} as DestinyAccount);
 
   React.useEffect(() => {
     getCharacterData();
-  }, [code]);
-
-  // const bungienet = new ClientOAuth2({
-  //   clientId: process.env.REACT_APP_DESTINY_CLIENT_ID,
-  //   // clientSecret: process.env.REACT_APP_DESTINY_CLIENT_ID,
-  //   redirectUri: 'https://localhost:3000/destiny-app/',
-  //   accessTokenUri: "https://www.bungie.net/Platform/App/OAuth/token/",
-  //   authorizationUri: "https://www.bungie.net/en/OAuth/Authorize",
-  //   scopes: ["ReadBasicUserProfile", "MoveEquipDestinyItems", "ReadDestinyInventoryAndVault"]
-  //   // headers: { "X-API-Key": process.env.REACT_APP_DESTINY_API_KEY}
-  // });
-  
-  // const getUrl = (url: string) => {
-  //   const url = github.code.getUri();
-  //   return response;
-  // }
-  
-  // const getResponse = async (url: string) => {
-  //   const response = await bungienet.code.getToken(url);
-  //   return response;
-  // }
-
-  function createFormParams (params: any)
-  {
-    return Object.keys(params)
-        .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
-        .join('&')
-  }
+  }, [haveToken]);
 
   async function getCharacterData()
   {
-    // bungienet.credentials.getToken()
-    //   .then(function (user) {
-    //     console.log(user) //=> { accessToken: '...', tokenType: 'bearer', ... }
-  // })
-      // const titles = await fetch('https://www.bungie.net/Platform/User/GetCurrentBungieNetUser/', {
-      //   headers: {
-      //     'X-API-Key': process.env.REACT_APP_DESTINY_API_KEY as string,
-      //     'Authorization': 'Bearer ' + code
-      //   }
-      // }).then(response => response.json());
-      // console.log(titles);
-      // console.log(titles['active_title']['name']);
-      // setActiveTitle(titles['active_title']);
       console.log("in data");
       console.log(localStorage.getItem('token'));
 
       const body = {'grant_type': 'authorization_code', 
                     'code': localStorage.getItem('token'),
-                    'client_id': process.env.REACT_APP_DESTINY_CLIENT_ID as string};
+                    'client_id': get_client_id()};
 
       const token = await fetch('https://www.bungie.net/Platform/App/OAuth/Token/', {
         method: 'post',
         body: createFormParams(body),
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', 
-                  'X-API-Key': process.env.REACT_APP_DESTINY_API_KEY as string}
-                  //  'Authorization': localStorage.getItem('token') as string}
+                  'X-API-Key': get_api_key()}
       }).then(response => response.json());
       console.log(token);
       localStorage.setItem('access_token', token.access_token);
 
       const user = await fetch('https://www.bungie.net/Platform/User/GetCurrentBungieNetUser/', {
-        headers: { 'X-API-Key': process.env.REACT_APP_DESTINY_API_KEY as string,
+        headers: { 'X-API-Key': get_api_key(),
                    'Authorization': 'Bearer ' + token.access_token}
       }).then(response => response.json());
 
@@ -97,31 +75,26 @@ function App()
       setUser(user.Response);
   }
 
+  var auth_link=`https://www.bungie.net/en/OAuth/Authorize?client_id=${get_client_id()}&response_type=code`;
   return (
     <Router>
           <div className="App">
           <header className="App-header">
             <img src={logo} className="App-logo" alt="logo" />
-            <a href="https://www.bungie.net/en/OAuth/Authorize?client_id=34288&response_type=code">Click here to auth</a>
+            <a href={auth_link}>Click here to auth w/ id {get_client_id()}</a>
             <p>
               Destiny stuff Edit <code>src/App.js</code> and save to reload.
             </p>
-            {user !== undefined && [<p>
-              Xbox username: {user.xboxDisplayName} </p>,
-              <p>PSN username: {user.psnDisplayName}
-            </p>]
-            }
-            <a
-              className="App-link"
-              href="https://reactjs.org"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learn React
-            </a>
+            We are <b>{is_dev() ? 'currently' : 'not'}</b> currently in dev mode.
+            {user.xboxDisplayName && <p>Xbox username: {user.xboxDisplayName} </p>}
+            {user.psnDisplayName && <p>PSN username: {user.psnDisplayName} </p>}
+
           </header>
 
-          <Route path="/destiny-app/authdone" component={Auth} />
+          <Route   render={(props) => (
+            <Auth {...props} setHaveToken={setHaveToken} />
+          )} />
+
       </div>
     </Router>
 
@@ -132,16 +105,13 @@ function Auth(props: any)
 {
   React.useEffect(() => {
     handleToken(props);
-  }, []);
+  });
 
   function handleToken(props: any)
   {
-    console.log(props);
-    console.log("yo were here");
     let params = qs.parse(props.location.search);
-    console.log(params.code);
     localStorage.setItem('token', params.code as string);
-    // props.setCode(params.code);
+    props.setHaveToken(true);
   }
 
   return (

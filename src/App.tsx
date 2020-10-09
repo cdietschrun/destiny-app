@@ -23,7 +23,7 @@ function get_client_id(): string
 
 function get_api_key() : string
 {
-  return is_dev() ? process.env.REACT_APP_DEV_DESTINY_CLIENT_ID as string : process.env.REACT_APP_DESTINY_CLIENT_ID as string;
+  return is_dev() ? process.env.REACT_APP_DEV_DESTINY_API_KEY as string : process.env.REACT_APP_DESTINY_API_KEY as string;
 }
 
 function createFormParams (params: any)
@@ -41,38 +41,38 @@ interface DestinyAccount
 
 function App()
 {
-  const [haveToken, setHaveToken] = useState(false);
+  const [token, setToken] = useState(undefined);
   const [user, setUser] = useState({} as DestinyAccount);
 
   React.useEffect(() => {
-    console.log("have token: " + haveToken);
-    if (haveToken)
+    console.log("token: " + token);
+    if (token !== undefined)
     {
+      console.log("have token");
       getCharacterData();
     }
-  }, [haveToken]);
+  }, [token]);
 
   async function getCharacterData()
   {
       console.log("in data");
-      console.log(localStorage.getItem('token'));
+      console.log(token);
 
       const body = {'grant_type': 'authorization_code', 
-                    'code': localStorage.getItem('token'),
+                    'code': token,
                     'client_id': get_client_id()};
 
-      const token = await fetch('https://www.bungie.net/Platform/App/OAuth/Token/', {
+      const a_token = await fetch('https://www.bungie.net/Platform/App/OAuth/Token/', {
         method: 'post',
         body: createFormParams(body),
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', 
                   'X-API-Key': get_api_key()}
       }).then(response => response.json());
-      console.log(token);
-      localStorage.setItem('access_token', token.access_token);
+      console.log(a_token);
 
       const user = await fetch('https://www.bungie.net/Platform/User/GetCurrentBungieNetUser/', {
         headers: { 'X-API-Key': get_api_key(),
-                   'Authorization': 'Bearer ' + token.access_token}
+                   'Authorization': 'Bearer ' + a_token.access_token}
       }).then(response => response.json());
 
       console.log(user);
@@ -90,13 +90,13 @@ function App()
               Destiny stuff Edit <code>src/App.js</code> and save to reload.
             </p>
             We are <b>{is_dev() ? 'currently' : 'not'}</b> currently in dev mode.
-            {user.xboxDisplayName && <p>Xbox username: {user.xboxDisplayName} </p>}
-            {user.psnDisplayName && <p>PSN username: {user.psnDisplayName} </p>}
+            {/* {user.xboxDisplayName && <p>Xbox username: {user.xboxDisplayName} </p>}
+            {user.psnDisplayName && <p>PSN username: {user.psnDisplayName} </p>} */}
 
           </header>
 
           <Route   render={(props) => (
-            <Auth {...props} setHaveToken={setHaveToken} />
+            <Auth {...props} setToken={setToken} />
           )} />
 
       </div>
@@ -114,8 +114,9 @@ function Auth(props: any)
   function handleToken(props: any)
   {
     let params = qs.parse(props.location.search);
-    localStorage.setItem('token', params.code as string);
-    props.setHaveToken(true);
+    console.log("aaa");
+    console.log(params);
+    props.setToken(params.code as string);
   }
 
   return (

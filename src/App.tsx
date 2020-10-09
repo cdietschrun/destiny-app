@@ -45,7 +45,11 @@ function App()
   const [user, setUser] = useState({} as DestinyAccount);
 
   React.useEffect(() => {
-    getCharacterData();
+    console.log("have token: " + haveToken);
+    if (haveToken)
+    {
+      getCharacterData();
+    }
   }, [haveToken]);
 
   async function getCharacterData()
